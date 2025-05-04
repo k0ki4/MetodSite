@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Галерея команды {{ team.group_name if team else "Моя команда" }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pink: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            300: '#f9a8d4',
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            700: '#be185d',
+                            800: '#9d174d',
+                            900: '#831843',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'slide-down': 'slideDown 0.4s ease-out',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'bounce-slow': 'bounceSlow 2s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'tilt': 'tilt 10s ease-in-out infinite',
+                        'shake': 'shake 0.5s ease-in-out',
+                        'zoom-in': 'zoomIn 0.3s ease-out',
+                        'rotate': 'rotate 20s linear infinite',
+                        'wave': 'wave 1.5s ease-in-out infinite',
+                        'flicker': 'flicker 4s linear infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        bounceSlow: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        tilt: {
+                            '0%, 100%': { transform: 'rotate(-2deg)' },
+                            '50%': { transform: 'rotate(2deg)' }
+                        },
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '20%, 60%': { transform: 'translateX(-5px)' },
+                            '40%, 80%': { transform: 'translateX(5px)' }
+                        },
+                        zoomIn: {
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        },
+                        rotate: {
+                            '0%': { transform: 'rotate(0deg)' },
+                            '100%': { transform: 'rotate(360deg)' }
+                        },
+                        wave: {
+                            '0%, 100%': { transform: 'rotate(0deg)' },
+                            '25%': { transform: 'rotate(5deg)' },
+                            '75%': { transform: 'rotate(-5deg)' }
+                        },
+                        flicker: {
+                            '0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100%': { opacity: '1' },
+                            '20%, 21.999%, 63%, 63.999%, 65%, 69.999%': { opacity: '0.7' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .photo-card {
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform-origin: center;
+        }
+        .photo-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px -10px rgba(236, 72, 153, 0.3);
+        }
+        .gallery-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            transition: transform 0.5s ease, filter 0.3s ease;
+        }
+        .gallery-image:hover {
+            transform: scale(1.03);
+            filter: brightness(1.05);
+        }
+        .modal-overlay {
+            background-color: rgba(251, 207, 232, 0.95);
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .modal-container {
+            display: flex;
+            align-items: flex-start;
+            min-height: 100%;
+            padding: 20px 0;
+        }
+        .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: zoomIn 0.3s ease-out;
+        }
+        .preview-image {
+            max-height: 70vh;
+            max-width: 90vw;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+        .preview-image:hover {
+            transform: scale(1.01);
+        }
+        .remove-btn {
+            transition: all 0.3s ease;
+        }
+        .remove-btn:hover {
+            transform: scale(1.2) rotate(90deg);
+        }
+        .flash-message {
+            animation: slideDown 0.5s ease-out, fadeIn 0.5s ease-in;
+        }
+        .download-btn {
+            transition: all 0.3s ease;
+        }
+        .download-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.1);
+        }
+        .sticky-buttons {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding-top: 1rem;
+            padding-bottom: 0.5rem;
+            border-top: 1px solid #fbcfe8;
+            animation: fadeIn 0.5s ease-out;
+        }
+        #preview-image-wrapper {
+            width: 192px;
+            height: 192px;
+            background-color: #f3f4f6;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 2px dashed #fbcfe8;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        #preview-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+        .nav-link {
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #ec4899;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        .add-btn {
+            transition: all 0.3s ease;
+        }
+        .add-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 10px 20px -5px rgba(236, 72, 153, 0.3);
+        }
+        .empty-gallery-icon {
+            animation: float 4s ease-in-out infinite, tilt 8s ease-in-out infinite;
+        }
+        .close-btn {
+            transition: all 0.3s ease;
+        }
+        .close-btn:hover {
+            transform: rotate(90deg) scale(1.1);
+            color: #f472b6;
+        }
+        .drag-area {
+            transition: all 0.3s ease;
+        }
+        .drag-area.highlight {
+            animation: pulse-slow 2s infinite;
+            border-color: #ec4899;
+            background-color: rgba(251, 207, 232, 0.3);
+        }
+        @keyframes rainbow {
+            0% { color: #ec4899; }
+            20% { color: #f472b6; }
+            40% { color: #f9a8d4; }
+            60% { color: #fbcfe8; }
+            80% { color: #f472b6; }
+            100% { color: #ec4899; }
+        }
+        .rainbow-text {
+            animation: rainbow 8s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-pink-50 min-h-screen">
+    <!-- Навигация -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex space-x-1">
+                <a href="/" class="px-4 py-2 rounded-md text-pink-700 font-medium nav-link flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                    </svg>
+                    Главная
+                </a>
+                <a href="/news" class="px-4 py-2 rounded-md text-pink-700 font-medium nav-link flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z" clip-rule="evenodd"/>
+                        <path d="M15 7h1a2 2 0 012 2v5.5a1.5 1.5 0 01-3 0V7z"/>
+                    </svg>
+                    Новости
+                </a>
+                <a href="/gallery" class="px-4 py-2 rounded-md bg-pink-100 text-pink-700 font-medium nav-link flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                    </svg>
+                    Галерея
+                </a>
+                <a href="/structure" class="px-4 py-2 rounded-md text-pink-700 font-medium nav-link flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z"/>
+                    </svg>
+                    Состав
+                </a>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-pink-500 font-medium">Команда {{ team.group_name if team else "" }}</span>
+                <div class="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-pink-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash-сообщения -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mx-auto px-4 py-2">
+                {% for category, message in messages %}
+                    <div class="flash-message p-4 mb-4 rounded-lg
+                        {% if category == 'success' %}bg-green-100 text-green-700
+                        {% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Основной контент -->
+    <main class="container mx-auto px-4 py-8 animate-fade-in">
+        <!-- Заголовок и кнопка добавления -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-pink-800 animate-slide-up">Галерея команды <span class="rainbow-text">{{ team.group_name if team else "Моя команда" }}</span></h1>
+            <button onclick="openModal()"
+                    class="add-btn bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                <span>Добавить фото</span>
+            </button>
+        </div>
+
+        <!-- Галерея фотографий -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for photo in gallery_photos %}
+            <div class="photo-card bg-white rounded-xl shadow-md overflow-hidden flex flex-col animate-fade-in" style="animation-delay: {{ loop.index * 0.1 }}s">
+                <div class="relative flex-grow flex items-center justify-center bg-gray-100">
+                    <img src="{{ url_for('static', filename='uploads/gallery/' + photo.image_path) }}"
+                         class="gallery-image cursor-pointer"
+                         alt="{{ photo.title }}"
+                         onclick="openFullImage('{{ url_for('static', filename='uploads/gallery/' + photo.image_path) }}', '{{ photo.title }}')">
+                </div>
+                <div class="p-4 flex-grow">
+                    <h3 class="font-semibold text-pink-700">{{ photo.title }}</h3>
+                    {% if photo.description %}
+                    <p class="mt-2 text-gray-600 text-sm">{{ photo.description }}</p>
+                    {% endif %}
+                    <p class="mt-3 text-xs text-pink-400">{{ photo.created_at.strftime('%d.%m.%Y') }}</p>
+                </div>
+                <div class="p-4 pt-0">
+                    <a href="{{ url_for('static', filename='uploads/gallery/' + photo.image_path) }}"
+                       download="{{ photo.title }}.jpg"
+                       class="download-btn bg-pink-500 hover:bg-pink-600 text-white px-3 py-1 rounded-lg text-sm flex items-center justify-center shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        Скачать
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-span-full text-center py-12 animate-pulse-slow">
+                <div class="inline-block p-6 bg-white rounded-xl shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-pink-400 empty-gallery-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <h3 class="mt-4 text-lg font-medium text-pink-600">Галерея пуста</h3>
+                    <p class="mt-2 text-pink-400">Добавьте первое фото!</p>
+                    <button onclick="openModal()"
+                            class="mt-4 add-btn bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mx-auto shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        <span>Добавить фото</span>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <!-- Модальное окно для добавления фото -->
+    <div id="addPhotoModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0 flex items-start justify-center p-4">
+            <div class="bg-white rounded-xl shadow-xl w-full max-w-md animate-slide-up my-8">
+                <div class="p-6 modal-content">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-pink-700">Добавить фото</h2>
+                        <button onclick="closeModal()" class="close-btn text-pink-500 hover:text-pink-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form id="photoForm" action="{{ url_for('gallery.add_photo') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                        <div class="animate-slide-up" style="animation-delay: 0.1s">
+                            <label class="block text-pink-600 mb-1">Название фото</label>
+                            <input type="text" name="title" required
+                                   class="w-full px-3 py-2 border border-pink-200 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all duration-300">
+                        </div>
+
+                        <div class="animate-slide-up" style="animation-delay: 0.2s">
+                            <label class="block text-pink-600 mb-1">Описание</label>
+                            <textarea name="description" rows="3"
+                                      class="w-full px-3 py-2 border border-pink-200 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all duration-300"></textarea>
+                        </div>
+
+                        <div class="animate-slide-up" style="animation-delay: 0.3s">
+                            <label class="block text-pink-600 mb-1">Фото</label>
+                            <div id="drag-area" class="drag-area mt-1 flex flex-col items-center px-6 pt-5 pb-6 border-2 border-pink-200 border-dashed rounded-lg">
+                                <!-- Контейнер для превью -->
+                                <div id="preview-image-wrapper" class="mb-4 relative">
+                                    <img id="preview-image" src="" alt="Превью" class="w-full h-full object-contain">
+                                    <button id="remove-preview-btn" type="button"
+                                            class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 remove-btn hover:bg-red-600 shadow-md"
+                                            onclick="removePreview()">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Стандартный интерфейс загрузки -->
+                                <div id="file-label" class="text-center">
+                                    <svg class="mx-auto h-12 w-12 text-pink-400 animate-bounce-slow" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div class="flex text-sm text-gray-600 justify-center mt-2">
+                                        <label class="relative cursor-pointer bg-white rounded-md font-medium text-pink-600 hover:text-pink-500 focus-within:outline-none transition-colors">
+                                            <span>Загрузить файл</span>
+                                            <input id="file-upload" name="photo" type="file" required class="sr-only" accept="image/*">
+                                        </label>
+                                        <p class="pl-1">или перетащите</p>
+                                    </div>
+                                    <p class="text-xs text-pink-400 mt-1">PNG, JPG, WEBP до 5MB</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="animate-slide-up" style="animation-delay: 0.4s">
+                            <label class="block text-pink-600 mb-1">Ключ доступа</label>
+                            <input type="password" name="access_key" required
+                                   class="w-full px-3 py-2 border border-pink-200 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all duration-300">
+                        </div>
+
+                        <div class="sticky-buttons animate-slide-up" style="animation-delay: 0.5s">
+                            <div class="flex justify-end space-x-3 pt-2">
+                                <button type="button" onclick="closeModal()"
+                                        class="px-4 py-2 border border-pink-300 text-pink-600 rounded-lg hover:bg-pink-50 transition-all duration-300 shadow-sm">
+                                    Отмена
+                                </button>
+                                <button type="submit"
+                                        class="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-all duration-300 shadow-md hover:shadow-lg">
+                                    Сохранить
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для просмотра фото -->
+    <div id="fullImageModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-90 flex items-center justify-center p-4">
+        <div class="relative max-w-full max-h-full animate-zoom-in">
+            <button onclick="closeFullImage()"
+                    class="absolute -top-10 right-0 text-white hover:text-pink-300 transition-all duration-300 close-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+            <img id="fullImage" src="" alt="" class="preview-image mx-auto">
+            <div class="text-center mt-4 text-white animate-fade-in" id="fullImageTitle"></div>
+        </div>
+    </div>
+
+    <!-- Футер -->
+    <footer class="bg-white border-t border-pink-200 py-8 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="text-xl font-bold text-pink-700 mb-2">{{ team.group_name if team else "Моя команда" }}</h3>
+                    <p class="text-pink-500">© {{ now.year }} Все права защищены</p>
+                </div>
+                <div class="flex space-x-4">
+                    <p class="text-pink-500"> Создатель: </p>
+                    <a href="https://t.me/k0ki4_176" target="_blank" class="text-pink-500 hover:text-pink-700">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.72-.41.96-.67.98-.58.05-.84-.38-1.3-.75-.72-.63-1.12-1.02-1.82-1.63-.79-.71-.28-.1.21-.69.14-.14 2.65-2.43 2.7-2.64.01-.04.01-.17-.06-.24s-.18-.04-.25-.02c-.11.03-1.79 1.14-5.06 3.34-.48.33-.91.5-1.31.51-.43 0-1.25-.24-1.87-.44-.75-.24-1.35-.37-1.3-.78.03-.26.32-.53.89-.77 3.63-1.59 5.39-2.38 8.25-3.68.78-.35 1.55-.53 1.78-.5.4.04.58.26.64.72z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Управление модальным окном добавления фото
+        function openModal() {
+            document.getElementById('addPhotoModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('addPhotoModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            document.getElementById('photoForm').reset();
+            removePreview();
+        }
+
+        // Управление модальным окном просмотра фото
+        function openFullImage(src, title) {
+            const modal = document.getElementById('fullImageModal');
+            const img = document.getElementById('fullImage');
+            const titleElement = document.getElementById('fullImageTitle');
+
+            img.src = src;
+            titleElement.textContent = title;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFullImage() {
+            document.getElementById('fullImageModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Функция для удаления превью
+        function removePreview() {
+            const fileInput = document.getElementById('file-upload');
+            const previewWrapper = document.getElementById('preview-image-wrapper');
+            const previewImage = document.getElementById('preview-image');
+            const removeBtn = document.getElementById('remove-preview-btn');
+            const fileLabel = document.getElementById('file-label');
+
+            fileInput.value = '';
+            previewWrapper.style.display = 'none';
+            previewImage.src = '';
+            removeBtn.style.display = 'none';
+            fileLabel.style.display = 'block';
+        }
+
+        // Обработчик выбора файла
+        document.getElementById('file-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const previewWrapper = document.getElementById('preview-image-wrapper');
+            const previewImage = document.getElementById('preview-image');
+            const removeBtn = document.getElementById('remove-preview-btn');
+            const fileLabel = document.getElementById('file-label');
+
+            if (!file) return;
+
+            if (!file.type.match('image.*')) {
+                alert('Пожалуйста, выберите изображение (PNG, JPG, WEBP)');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewWrapper.style.display = 'flex';
+                removeBtn.style.display = 'block';
+                fileLabel.style.display = 'none';
+            }
+            reader.readAsDataURL(file);
+        });
+
+        // Автоматическое скрытие flash-сообщений
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(message => {
+                setTimeout(() => {
+                    message.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateY(-10px)';
+                    setTimeout(() => message.remove(), 500);
+                }, 5000);
+            });
+        });
+
+        // Закрытие по ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeFullImage();
+            }
+        });
+
+        // Обработка drag and drop
+        const dropArea = document.getElementById('drag-area');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            dropArea.classList.add('highlight');
+        }
+
+        function unhighlight() {
+            dropArea.classList.remove('highlight');
+        }
+
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            const fileInput = document.getElementById('file-upload');
+            fileInput.files = files;
+
+            const event = new Event('change');
+            fileInput.dispatchEvent(event);
+
+            // Анимация подтверждения загрузки
+            dropArea.classList.add('highlight');
+            setTimeout(() => {
+                dropArea.classList.remove('highlight');
+            }, 500);
+        }
+
+        // Анимация при наведении на кнопки навигации
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('mouseenter', () => {
+                link.style.transform = 'translateY(-2px)';
+            });
+            link.addEventListener('mouseleave', () => {
+                link.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body>
+</html>

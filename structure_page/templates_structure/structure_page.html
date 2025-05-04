@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Наш состав | {{ team.group_name if team else "Моя команда" }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        function updateMemberCard(index, direction) {
+            // ... существующий код ...
+
+            // Определяем ориентацию фото после загрузки
+            const img = document.getElementById('memberPhoto');
+            img.onload = function() {
+                if (this.naturalHeight > this.naturalWidth) {
+                    this.parentElement.classList.add('vertical-photo');
+                } else {
+                    this.parentElement.classList.remove('vertical-photo');
+                }
+            };
+            // Принудительно запускаем проверку, если фото уже загружено
+            if (img.complete) img.onload();
+        }
+
+
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pink: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            300: '#f9a8d4',
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            700: '#be185d',
+                            800: '#9d174d',
+                            900: '#831843',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'slide-down': 'slideDown 0.4s ease-out',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'bounce-slow': 'bounceSlow 2s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'tilt': 'tilt 10s ease-in-out infinite',
+                        'shake': 'shake 0.5s ease-in-out',
+                        'zoom-in': 'zoomIn 0.3s ease-out',
+                        'rotate': 'rotate 20s linear infinite',
+                        'wave': 'wave 1.5s ease-in-out infinite',
+                        'flicker': 'flicker 4s linear infinite',
+                        'card-enter': 'cardEnter 0.6s ease-out',
+                        'slide-left': 'slideLeft 0.5s ease-out',
+                        'slide-right': 'slideRight 0.5s ease-out',
+                        'card-hover': 'cardHover 6s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        bounceSlow: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        tilt: {
+                            '0%, 100%': { transform: 'rotate(-2deg)' },
+                            '50%': { transform: 'rotate(2deg)' }
+                        },
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '20%, 60%': { transform: 'translateX(-5px)' },
+                            '40%, 80%': { transform: 'translateX(5px)' }
+                        },
+                        zoomIn: {
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        },
+                        rotate: {
+                            '0%': { transform: 'rotate(0deg)' },
+                            '100%': { transform: 'rotate(360deg)' }
+                        },
+                        wave: {
+                            '0%, 100%': { transform: 'rotate(0deg)' },
+                            '25%': { transform: 'rotate(5deg)' },
+                            '75%': { transform: 'rotate(-5deg)' }
+                        },
+                        flicker: {
+                            '0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100%': { opacity: '1' },
+                            '20%, 21.999%, 63%, 63.999%, 65%, 69.999%': { opacity: '0.7' }
+                        },
+                        cardEnter: {
+                            '0%': { transform: 'scale(0.9) translateY(30px)', opacity: '0' },
+                            '100%': { transform: 'scale(1) translateY(0)', opacity: '1' }
+                        },
+                        slideLeft: {
+                            '0%': { transform: 'translateX(50px)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' }
+                        },
+                        slideRight: {
+                            '0%': { transform: 'translateX(-50px)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' }
+                        },
+                        cardHover: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-8px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+
+        .vertical-photo .member-photo {
+            width: auto;
+            max-width: 100%;
+        }
+        .photo-container {
+            height: 70vh; /* 70% высоты экрана */
+            min-height: 400px; /* Минимальная высота */
+            max-height: 800px; /* Максимальная высота */
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .member-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Сохраняет пропорции, полностью помещает фото */
+            object-position: center top; /* Выравнивание по верхнему краю */
+            transition: all 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .photo-container {
+                height: 50vh;
+                min-height: 300px;
+            }
+        }
+
+        .team-member-card {
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform-origin: center;
+            animation: card-enter 0.6s ease-out;
+        }
+        .team-member-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 30px -10px rgba(236, 72, 153, 0.3);
+            animation: card-hover 6s ease-in-out infinite;
+        }
+        .member-photo {
+            transition: all 0.5s ease;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+        }
+        .member-photo:hover {
+            transform: scale(1.03);
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
+        }
+        .info-plate {
+            background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+            transition: all 0.3s ease;
+        }
+        .nav-link {
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #ec4899;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        .arrow-btn {
+            transition: all 0.3s ease;
+        }
+        .arrow-btn:hover {
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.4));
+        }
+        .role-badge {
+            animation: pulse-slow 3s infinite;
+        }
+        @keyframes rainbow {
+            0% { color: #ec4899; }
+            20% { color: #f472b6; }
+            40% { color: #f9a8d4; }
+            60% { color: #fbcfe8; }
+            80% { color: #f472b6; }
+            100% { color: #ec4899; }
+        }
+        .rainbow-text {
+            animation: rainbow 8s linear infinite;
+        }
+        .slide-in-left {
+            animation: slideLeft 0.5s ease-out;
+        }
+        .slide-in-right {
+            animation: slideRight 0.5s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-pink-50 min-h-screen">
+    <!-- Навигация -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex space-x-1">
+                <a href="/" class="px-4 py-2 rounded-md text-pink-700 font-medium nav-link flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                    </svg>
+                    Главная
+                </a>
+                <a href="/news" class="px-4 py-2 rounded-md text-pink-700 font-medium nav-link flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z" clip-rule="evenodd"/>
+                        <path d="M15 7h1a2 2 0 012 2v5.5a1.5 1.5 0 01-3 0V7z"/>
+                    </svg>
+                    Новости
+                </a>
+                <a href="/gallery" class="px-4 py-2 rounded-md text-pink-700 font-medium nav-link flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                    </svg>
+                    Галерея
+                </a>
+                <a href="/structure" class="px-4 py-2 rounded-md bg-pink-100 text-pink-700 font-medium nav-link flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z"/>
+                    </svg>
+                    Состав
+                </a>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-pink-500 font-medium">Команда {{ team.group_name if team else "" }}</span>
+                <div class="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-pink-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <main class="container mx-auto px-4 py-8 animate-fade-in">
+        <h1 class="text-4xl font-bold text-pink-800 mb-12 text-center animate-slide-up">Наш состав <span class="rainbow-text">{{ team.group_name if team else "Моя команда" }}</span></h1>
+
+        {% if team_members %}
+        <!-- Карточка члена команды -->
+        <div class="max-w-3xl mx-auto relative">
+            <!-- Стрелка влево -->
+            <button onclick="prevMember()"
+                    class="arrow-btn absolute left-0 top-1/2 -translate-y-1/2 -ml-16 bg-white p-4 rounded-full shadow-md text-pink-500 hover:text-pink-700 z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+
+            <!-- Карточка -->
+            <div id="memberCard" class="team-member-card bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-500">
+                <!-- Фото в полный рост -->
+                <div class="relative w-full h-96 overflow-hidden bg-gray-100">
+                    <img id="memberPhoto" src="{{ url_for('static', filename='/structure/' + team_members[0].photo) }}"
+                         class="member-photo"
+                         alt="Фото члена команды">
+                </div>
+
+                <!-- Информация -->
+                <div class="info-plate p-8 rounded-b-xl">
+                    <div class="mb-6">
+                        <h2 id="memberName" class="text-3xl font-bold text-pink-800">{{ team_members[0].first_name }} {{ team_members[0].last_name }}</h2>
+                        {% if team_members[0].patronymic %}
+                        <p id="memberPatronymic" class="text-xl text-pink-600 mt-2">{{ team_members[0].patronymic }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="role-badge inline-block bg-pink-500 text-white px-6 py-2 rounded-full mb-6 text-lg">
+                        <span id="memberRole" class="font-medium">{{ team_members[0].role }}</span>
+                    </div>
+
+                    {% if team_members[0].description %}
+                    <p id="memberDescription" class="text-lg text-pink-700 mb-6 leading-relaxed">
+                        {{ team_members[0].description }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Социальные сети -->
+                    <div class="pt-4">
+                        <h3 class="font-medium text-pink-600 mb-2">Социальные сети:</h3>
+                        <div class="flex space-x-3">
+                            <!-- ВКонтакте -->
+                            {% if team_members[0].vk_link %}
+                            <a href="{{ team.group_link }}" target="_blank" class="social-icon bg-[#4680C2] hover:bg-[#3a6ba5] text-white p-2 rounded-full">
+                                <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M15.07 2H8.93C3.33 2 2 3.33 2 8.93V15.07C2 20.67 3.33 22 8.93 22H15.07C20.67 22 22 20.67 22 15.07V8.93C22 3.33 20.67 2 15.07 2M18.15 16.27H16.69C16.14 16.27 15.97 15.82 15 14.83C14.12 14 13.74 13.88 13.53 13.88C13.24 13.88 13.15 13.96 13.15 14.38V15.69C13.15 16.04 13.04 16.26 12.11 16.26C10.57 16.26 8.86 15.32 7.66 13.59C5.85 11.05 5.36 9.13 5.36 8.75C5.36 8.54 5.43 8.34 5.85 8.34H7.32C7.69 8.34 7.83 8.5 7.97 8.9C8.69 11 9.89 12.8 10.38 12.8C10.57 12.8 10.65 12.71 10.65 12.25V10.1C10.6 9.12 10.07 9.03 10.07 8.68C10.07 8.5 10.21 8.34 10.44 8.34H12.73C13.04 8.34 13.15 8.5 13.15 8.88V11.77C13.15 12.08 13.28 12.19 13.38 12.19C13.56 12.19 13.72 12.08 14.05 11.74C15.1 10.57 15.85 8.76 15.85 8.76C15.95 8.55 16.11 8.35 16.5 8.35H17.93C18.37 8.35 18.47 8.58 18.37 8.89C18.19 9.74 16.41 12.25 16.43 12.25C16.27 12.5 16.21 12.61 16.43 12.9C16.58 13.11 17.09 13.55 17.43 13.94C18.05 14.65 18.53 15.24 18.66 15.65C18.77 16.06 18.57 16.27 18.15 16.27Z"/>
+                                </svg>
+                            </a>
+                            {% endif %}
+
+                            <!-- Telegram -->
+                            {% if team_members[0].tg_link %}
+                            <a href="{{ team.telegram_link }}" target="_blank" class="social-icon bg-[#2AABEE] hover:bg-[#229ED9] text-white p-2 rounded-full">
+                                <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.72-.41.96-.67.98-.58.05-.84-.38-1.3-.75-.72-.63-1.12-1.02-1.82-1.63-.79-.71-.28-.1.21-.69.14-.14 2.65-2.43 2.7-2.64.01-.04.01-.17-.06-.24s-.18-.04-.25-.02c-.11.03-1.79 1.14-5.06 3.34-.48.33-.91.5-1.31.51-.43 0-1.25-.24-1.87-.44-.75-.24-1.35-.37-1.3-.78.03-.26.32-.53.89-.77 3.63-1.59 5.39-2.38 8.25-3.68.78-.35 1.55-.53 1.78-.5.4.04.58.26.64.72z"/>
+                                </svg>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Стрелка вправо -->
+            <button onclick="nextMember()"
+                    class="arrow-btn absolute right-0 top-1/2 -translate-y-1/2 -mr-16 bg-white p-4 rounded-full shadow-md text-pink-500 hover:text-pink-700 z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Индикаторы (точки) -->
+        <div class="flex justify-center mt-8 space-x-2">
+            {% for member in team_members %}
+            <button onclick="goToMember({{ loop.index0 }})"
+                    class="w-3 h-3 rounded-full bg-pink-300 hover:bg-pink-500 transition-colors member-indicator {% if loop.first %}bg-pink-600{% endif %}"></button>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <div class="inline-block p-6 bg-white rounded-xl shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <h3 class="mt-4 text-lg font-medium text-pink-600">Состав команды пуст</h3>
+                <p class="mt-2 text-pink-400">Добавьте участников команды</p>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Футер -->
+    <footer class="bg-white border-t border-pink-200 py-8 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="text-xl font-bold text-pink-700 mb-2">{{ team.group_name if team else "Моя команда" }}</h3>
+                    <p class="text-pink-500">© {{ now.year }} Все права защищены</p>
+                </div>
+                <div class="flex space-x-4">
+                    <p class="text-pink-500"> Создатель: </p>
+                    <a href="https://t.me/k0ki4_176" target="_blank" class="text-pink-500 hover:text-pink-700">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.72-.41.96-.67.98-.58.05-.84-.38-1.3-.75-.72-.63-1.12-1.02-1.82-1.63-.79-.71-.28-.1.21-.69.14-.14 2.65-2.43 2.7-2.64.01-.04.01-.17-.06-.24s-.18-.04-.25-.02c-.11.03-1.79 1.14-5.06 3.34-.48.33-.91.5-1.31.51-.43 0-1.25-.24-1.87-.44-.75-.24-1.35-.37-1.3-.78.03-.26.32-.53.89-.77 3.63-1.59 5.39-2.38 8.25-3.68.78-.35 1.55-.53 1.78-.5.4.04.58.26.64.72z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    {% if team_members %}
+    <script>
+        // Данные членов команды из базы данных
+        const teamMembers = [
+            {% for member in team_members %}
+            {
+                id: {{ member.id }},
+                firstName: "{{ member.first_name }}",
+                lastName: "{{ member.last_name }}",
+                patronymic: "{{ member.patronymic if member.patronymic else '' }}",
+                role: "{{ member.role }}",
+                description: `{{ member.description if member.description else '' }}`,
+                photo: "{{ url_for('static', filename='uploads/structure/' + member.photo) }}"
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        let currentMemberIndex = 0;
+
+        // Обновление карточки
+        function updateMemberCard(index, direction) {
+            const member = teamMembers[index];
+            const card = document.getElementById('memberCard');
+
+            // Анимация в зависимости от направления
+            if (direction === 'left') {
+                card.classList.remove('slide-in-right');
+                card.classList.add('slide-in-left');
+            } else if (direction === 'right') {
+                card.classList.remove('slide-in-left');
+                card.classList.add('slide-in-right');
+            } else {
+                card.classList.remove('slide-in-left', 'slide-in-right');
+            }
+
+            // Обновление данных
+            document.getElementById('memberName').textContent = `${member.firstName} ${member.lastName}`;
+            document.getElementById('memberPatronymic').textContent = member.patronymic;
+            document.getElementById('memberRole').textContent = member.role;
+            document.getElementById('memberDescription').textContent = member.description;
+            document.getElementById('memberPhoto').src = member.photo;
+
+            // Обновление индикаторов
+            document.querySelectorAll('.member-indicator').forEach((indicator, i) => {
+                if (i === index) {
+                    indicator.classList.add('bg-pink-600');
+                    indicator.classList.remove('bg-pink-300');
+                } else {
+                    indicator.classList.remove('bg-pink-600');
+                    indicator.classList.add('bg-pink-300');
+                }
+            });
+        }
+
+        // Переключение на предыдущего члена команды
+        function prevMember() {
+            currentMemberIndex = (currentMemberIndex - 1 + teamMembers.length) % teamMembers.length;
+            updateMemberCard(currentMemberIndex, 'right');
+        }
+
+        // Переключение на следующего члена команды
+        function nextMember() {
+            currentMemberIndex = (currentMemberIndex + 1) % teamMembers.length;
+            updateMemberCard(currentMemberIndex, 'left');
+        }
+
+        // Переход к конкретному члену команды
+        function goToMember(index) {
+            const direction = index > currentMemberIndex ? 'left' : 'right';
+            currentMemberIndex = index;
+            updateMemberCard(currentMemberIndex, direction);
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            updateMemberCard(0);
+
+            // Обработка клавиш клавиатуры
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowLeft') {
+                    prevMember();
+                } else if (e.key === 'ArrowRight') {
+                    nextMember();
+                }
+            });
+        });
+    </script>
+    {% endif %}
+</body>
+</html>
