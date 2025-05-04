@@ -1,6 +1,5 @@
 import os
 import threading
-from imp import reload
 
 from __init import app
 from bot_tg import run_bot
